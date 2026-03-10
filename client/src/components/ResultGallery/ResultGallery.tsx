@@ -3,8 +3,6 @@ import { GeneratedImage } from '../../types/image.types';
 import { GenerateResponseUsage } from '../../types/api.types';
 import { appConfig } from '@config/app.config';
 
-const VARIATION_LABELS = ['TOFU', 'MOFU', 'BOFU', 'Creative mix'] as const;
-
 interface ResultGalleryProps {
   images: GeneratedImage[];
   usage?: GenerateResponseUsage | null;
@@ -70,8 +68,7 @@ export const ResultGallery: React.FC<ResultGalleryProps> = ({
 
   const handleDownloadAll = useCallback(() => {
     images.forEach((img, i) => {
-      const label = VARIATION_LABELS[i % VARIATION_LABELS.length];
-      const filename = `variation-${i + 1}-${label.toLowerCase().replace(/\s/g, '-')}.png`;
+      const filename = `variation-${i + 1}.png`;
       setTimeout(() => handleDownload(img.url, filename), i * 200);
     });
   }, [images, handleDownload]);
@@ -134,7 +131,7 @@ export const ResultGallery: React.FC<ResultGalleryProps> = ({
               <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
                 <img
                   src={getFullUrl(img.url)}
-                  alt={`Variation ${index + 1} - ${VARIATION_LABELS[index % VARIATION_LABELS.length]}`}
+                  alt={`Variation ${index + 1}`}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   loading="lazy"
                 />
@@ -161,7 +158,7 @@ export const ResultGallery: React.FC<ResultGalleryProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDownload(img.url, `variation-${index + 1}-${VARIATION_LABELS[index % VARIATION_LABELS.length].toLowerCase().replace(/\s/g, '-')}.png`);
+                      handleDownload(img.url, `variation-${index + 1}.png`);
                     }}
                     title="Download"
                     className="p-2 rounded-full bg-white/90 hover:bg-white text-gray-800"
@@ -172,11 +169,6 @@ export const ResultGallery: React.FC<ResultGalleryProps> = ({
                   </button>
                 </div>
               </div>
-            </div>
-            <div className="p-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                {VARIATION_LABELS[index % VARIATION_LABELS.length]}
-              </span>
             </div>
           </div>
         ))}
@@ -227,7 +219,7 @@ export const ResultGallery: React.FC<ResultGalleryProps> = ({
             </svg>
           </button>
           <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/80 text-sm">
-            {modalIndex + 1} / {images.length} — {VARIATION_LABELS[modalIndex % VARIATION_LABELS.length]}
+            {modalIndex + 1} / {images.length}
           </span>
         </div>
       )}
