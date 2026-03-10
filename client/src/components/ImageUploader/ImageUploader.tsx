@@ -43,10 +43,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onFilesSelected, d
       onClick={handleClick}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      className={`border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer transition-colors ${
-        disabled ? 'border-gray-300 bg-gray-50 cursor-not-allowed' : 'border-blue-400 hover:border-blue-600 hover:bg-blue-50 bg-white'
+      className={`relative group border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 overflow-hidden ${
+        disabled 
+          ? 'border-zinc-200 bg-zinc-50 cursor-not-allowed' 
+          : 'border-zinc-300 hover:border-zinc-900 hover:bg-zinc-50/50 bg-white'
       }`}
     >
+      <div className={`absolute inset-0 bg-gradient-to-br from-zinc-100/50 to-transparent opacity-0 transition-opacity duration-300 ${!disabled && 'group-hover:opacity-100'}`} />
+      
       <input
         type="file"
         multiple
@@ -56,15 +60,23 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onFilesSelected, d
         className="hidden"
         disabled={disabled}
       />
-      <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-      </svg>
-      <p className="text-gray-600 text-center font-medium">
-        {label || 'Click or drag and drop images here'}
-      </p>
-      <p className="text-gray-400 text-sm mt-2 text-center">
-        {hint || 'Supports JPG, PNG, WEBP, GIF (Max 4 images, 10MB each)'}
-      </p>
+      
+      <div className="relative z-10 flex flex-col items-center">
+        <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-colors ${disabled ? 'bg-zinc-100 text-zinc-400' : 'bg-zinc-100 text-zinc-600 group-hover:bg-zinc-900 group-hover:text-white'}`}>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <p className="text-zinc-900 text-center font-semibold text-base mb-1">
+          {label || 'Select images to upload'}
+        </p>
+        <p className="text-zinc-500 text-sm text-center">
+          or drag and drop here
+        </p>
+        <p className="text-zinc-400 text-xs mt-4 text-center font-medium uppercase tracking-wider">
+          {hint || 'JPG, PNG, WEBP up to 10MB'}
+        </p>
+      </div>
     </div>
   );
 };
