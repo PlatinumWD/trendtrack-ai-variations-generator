@@ -24,19 +24,25 @@ export interface GenerateVariationsResult {
   usage: { prompt_tokens: number; completion_tokens: number; total_cost: number };
 }
 
-const BASE_PROMPT = "You receive two groups of images. FIRST: product(s) to showcase. SECOND: creative references (ads) for INSPIRATION ONLY. Do NOT copy, replicate, or paste elements from the references. Use them only as loose inspiration for mood, color palette, and composition ideas. Create something NEW and original. The product(s) must remain the hero. Each output must be distinctly different.";
+const BASE_PROMPT_WITH_REFS =
+  "You receive two groups of images. FIRST: product(s) to showcase. SECOND: creative references (ads) for INSPIRATION ONLY. Do NOT copy, replicate, or paste elements from the references. Use them only as loose inspiration for mood, color palette, and composition ideas. Create something NEW and original. The product(s) must remain the hero. Each output must be distinctly different.";
 
-const FUSION_HINT = " When multiple products are provided, merge them CREATIVELY: one product can adopt the colors, design, or style of another. Create a cohesive creative ensemble — not just placing them side by side.";
+const BASE_PROMPT_NO_REFS =
+  "You receive product(s) to showcase. Create creative ad variations. The product(s) must remain the hero. Each output must be distinctly different. Be original and inventive.";
+
+const FUSION_HINT =
+  " When multiple products are provided, merge them CREATIVELY: one product can adopt the colors, design, or style of another. Create a cohesive creative ensemble — not just placing them side by side.";
 
 const CREATIVE_DIRECTIONS = [
-  "TOFU (Top of funnel — awareness): Aspirational, lifestyle, brand-building. No hard sell, no promo text. Draw the viewer in with desire and aspiration. Original layout, inspired by references for mood only.",
-  "MOFU (Middle of funnel — consideration): Value-focused, educational. Highlight benefits, quality, use cases. Subtle headline or tagline. Help the viewer consider the product. Original creative, do not copy references.",
-  "BOFU (Bottom of funnel — conversion): Promo, urgency, CTA. Discount badge, gift offer, or call-to-action. Conversion-focused. Dark or rich background. Original take, inspired by references for composition ideas only.",
-  "Creative mix: Blend TOFU and BOFU — aspirational yet conversion-ready. Bold headline, premium feel, subtle CTA. Entirely original, unrecognizable from the source references.",
+  "TOFU (Top of funnel — awareness): Aspirational, lifestyle, brand-building. No hard sell, no promo text. Draw the viewer in with desire and aspiration. Original layout.",
+  "MOFU (Middle of funnel — consideration): Value-focused, educational. Highlight benefits, quality, use cases. Subtle headline or tagline. Help the viewer consider the product. Original creative.",
+  "BOFU (Bottom of funnel — conversion): Promo, urgency, CTA. Discount badge, gift offer, or call-to-action. Conversion-focused. Dark or rich background. Original take.",
+  "Creative mix: Blend TOFU and BOFU — aspirational yet conversion-ready. Bold headline, premium feel, subtle CTA. Entirely original.",
 ];
 
-const buildPrompt = (creativeDirection: string, fusion: boolean): string => {
-  const parts = [BASE_PROMPT, creativeDirection];
+const buildPrompt = (creativeDirection: string, fusion: boolean, hasReferences: boolean): string => {
+  const base = hasReferences ? BASE_PROMPT_WITH_REFS : BASE_PROMPT_NO_REFS;
+  const parts = [base, creativeDirection];
   if (fusion) parts.push(FUSION_HINT);
   return parts.join(" ");
 };
@@ -47,12 +53,14 @@ export const openrouterService = {
     referenceBase64: string[],
     count: number = 1,
     maxInputDimension: number = 1024,
-    fusion: boolean = false
+    fusion: boolean = false,
+    variationIndex?: number
   ): Promise<GenerateVariationsResult> => {
     const outputSize = resolveOutputSize(maxInputDimension);
 
+    const hasReferences = referenceBase64.length > 0;
     const buildPayload = (creativeDirection: string) => {
-      const textPrompt = buildPrompt(creativeDirection, fusion);
+      const textPrompt = buildPrompt(creativeDirection, fusion, hasReferences);
       const content: OpenRouterContent[] = [{ type: 'text', text: textPrompt }];
       for (const url of productBase64) {
         content.push({ type: 'image_url', image_url: { url } });
@@ -107,10 +115,8 @@ export const openrouterService = {
     };
 
     try {
-      const promises = [];
-      for (let i = 0; i < count; i++) {
-        promises.push(generateSingle(i));
-      }
+      const indices = variationIndex !== undefined ? [variationIndex] : Array.from({ length: count }, (_, i) => i);
+      const promises = indices.map((i) => generateSingle(i));
       
       const results = await Promise.all(promises);
       const generatedBase64Images = results

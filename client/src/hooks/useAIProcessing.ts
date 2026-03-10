@@ -12,7 +12,7 @@ export const useAIProcessing = () => {
   const [error, setError] = useState<string | null>(null);
 
   const generate = useCallback(async (productFiles: File[], referenceFiles: File[], count: number = 1, fusion: boolean = false) => {
-    if (!productFiles?.length || !referenceFiles?.length) return;
+    if (!productFiles?.length) return;
 
     setIsLoading(true);
     setError(null);
@@ -21,9 +21,9 @@ export const useAIProcessing = () => {
 
     try {
       const data = await aiService.generateVariations(productFiles, referenceFiles, count, fusion);
-      const newImages = data.generatedImages.map(url => ({
+      const newImages = data.generatedImages.map((url) => ({
         id: uuidv4(),
-        url
+        url,
       }));
       setGeneratedImages(newImages);
       if (data.usage) setUsage(data.usage);
@@ -34,6 +34,41 @@ export const useAIProcessing = () => {
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  const regenerateSingle = useCallback(
+    async (
+      productFiles: File[],
+      referenceFiles: File[],
+      fusion: boolean,
+      index: number
+    ): Promise<GeneratedImage | null> => {
+      if (!productFiles?.length) return null;
+
+      try {
+        const data = await aiService.generateVariations(
+          productFiles,
+          referenceFiles,
+          1,
+          fusion,
+          index % 4
+        );
+        if (!data.generatedImages?.length) return null;
+        return { id: uuidv4(), url: data.generatedImages[0] };
+      } catch {
+        return null;
+      }
+    },
+    []
+  );
+
+  const replaceImageAtIndex = useCallback((index: number, image: GeneratedImage) => {
+    setGeneratedImages((prev) => {
+      if (index < 0 || index >= prev.length) return prev;
+      const next = [...prev];
+      next[index] = image;
+      return next;
+    });
   }, []);
 
   const clearResults = useCallback(() => {
@@ -50,6 +85,8 @@ export const useAIProcessing = () => {
     model,
     error,
     generate,
-    clearResults
+    regenerateSingle,
+    replaceImageAtIndex,
+    clearResults,
   };
 };

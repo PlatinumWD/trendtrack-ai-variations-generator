@@ -11,10 +11,11 @@ export const Home: React.FC = () => {
   const [fusionEnabled, setFusionEnabled] = useState<boolean>(false);
   const products = useImageUpload(10);
   const references = useImageUpload(10);
-  const { isLoading, generatedImages, usage, model, error: aiError, generate } = useAIProcessing();
+  const { isLoading, generatedImages, usage, model, error: aiError, generate, regenerateSingle, replaceImageAtIndex } = useAIProcessing();
+  const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null);
 
   const handleGenerate = () => {
-    if (products.images.length === 0 || references.images.length === 0) return;
+    if (products.images.length === 0) return;
     generate(
       products.images.map((i) => i.file),
       references.images.map((i) => i.file),
@@ -23,7 +24,23 @@ export const Home: React.FC = () => {
     );
   };
 
-  const canGenerate = products.images.length > 0 && references.images.length > 0;
+  const canGenerate = products.images.length > 0;
+
+  const handleRegenerate = async (index: number) => {
+    if (products.images.length === 0) return;
+    setRegeneratingIndex(index);
+    try {
+      const newImage = await regenerateSingle(
+        products.images.map((i) => i.file),
+        references.images.map((i) => i.file),
+        fusionEnabled,
+        index
+      );
+      if (newImage) replaceImageAtIndex(index, newImage);
+    } finally {
+      setRegeneratingIndex(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
@@ -33,7 +50,7 @@ export const Home: React.FC = () => {
             AI Product Variations
           </h1>
           <p className="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">
-            Upload your product(s) and creative references (ads). The AI will generate variations inspired by the references.
+            Upload your product(s). Optionally add creative references (ads) for style inspiration.
           </p>
         </header>
 
@@ -59,7 +76,7 @@ export const Home: React.FC = () => {
             </div>
 
             <div>
-              <h2 className="text-sm font-semibold text-gray-700 mb-2">Creative references (ads)</h2>
+              <h2 className="text-sm font-semibold text-gray-700 mb-2">Creative references (ads) — optional</h2>
               <ImageUploader
                 onFilesSelected={references.addImages}
                 disabled={isLoading}
@@ -128,7 +145,16 @@ export const Home: React.FC = () => {
             </div>
           )}
 
-          {!isLoading && <ResultGallery images={generatedImages} usage={usage} model={model} />}
+          {!isLoading && (
+            <ResultGallery
+              images={generatedImages}
+              usage={usage}
+              model={model}
+              onRegenerate={handleRegenerate}
+              regeneratingIndex={regeneratingIndex}
+              disabled={isLoading}
+            />
+          )}
         </main>
       </div>
     </div>

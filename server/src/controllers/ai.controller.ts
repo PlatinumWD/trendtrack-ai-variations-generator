@@ -12,9 +12,13 @@ export const aiController = {
       const countStr = req.body.count;
       const count = countStr ? parseInt(countStr, 10) : 1;
       const fusion = req.body.fusion === 'true';
+      const variationIndexStr = req.body.variationIndex;
+      const variationIndex = variationIndexStr !== undefined && variationIndexStr !== ''
+        ? Math.max(0, Math.min(3, parseInt(variationIndexStr, 10)))
+        : undefined;
 
-      if (productFiles.length === 0 || referenceFiles.length === 0) {
-        return res.status(400).json({ error: 'Both products and references are required' });
+      if (productFiles.length === 0) {
+        return res.status(400).json({ error: 'At least one product image is required' });
       }
 
       const productBase64: string[] = [];
@@ -32,12 +36,14 @@ export const aiController = {
         maxDimension = Math.max(maxDimension, width, height);
       }
 
+      const effectiveCount = variationIndex !== undefined ? 1 : count;
       const { images: generatedBase64DataUrls, model, usage } = await openrouterService.generateVariations(
         productBase64,
         referenceBase64,
-        count,
+        effectiveCount,
         maxDimension,
-        fusion
+        fusion,
+        variationIndex
       );
 
       const savedImageUrls: string[] = [];
