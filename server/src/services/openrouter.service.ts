@@ -34,7 +34,7 @@ const FUSION_HINT =
   " When multiple products are provided, merge them CREATIVELY: one product can adopt the colors, design, or style of another. Create a cohesive creative ensemble — not just placing them side by side.";
 
 const CREATIVE_DIRECTIONS = [
-  "TOFU (Top of funnel — awareness): Aspirational, lifestyle, brand-building. No hard sell, no promo text. Draw the viewer in with desire and aspiration. Original layout.",
+  "TOFU (Top of funnel — awareness): Lifestyle mood through colors and setting only — no human figures, no coffee, no unrelated objects. The product alone in an aspirational environment. No hard sell, no promo text. Draw the viewer in with desire and aspiration. Original layout.",
   "MOFU (Middle of funnel — consideration): Value-focused, educational. Highlight benefits, quality, use cases. Subtle headline or tagline. Help the viewer consider the product. Original creative.",
   "BOFU (Bottom of funnel — conversion): Promo, urgency, CTA. Discount badge, gift offer, or call-to-action. Conversion-focused. Dark or rich background. Original take.",
   "Creative mix: Blend TOFU and BOFU — aspirational yet conversion-ready. Bold headline, premium feel, subtle CTA. Entirely original.",
