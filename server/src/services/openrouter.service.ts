@@ -24,20 +24,25 @@ export interface GenerateVariationsResult {
   usage: { prompt_tokens: number; completion_tokens: number; total_cost: number };
 }
 
+const MARKETING_STYLE =
+  "Output must be a MARKETING GRAPHIC: clean, designed ad layout. Use solid or gradient backgrounds — NO blurred rooms, furniture, or environmental clutter. Prefer graphic-style compositions with headline, benefits, or CTA when fitting. Product on a minimal surface or integrated into the layout. No people, no coffee, no unrelated objects.";
+
 const BASE_PROMPT_WITH_REFS =
-  "You receive two groups of images. FIRST: product(s) to showcase. SECOND: creative references (ads) for INSPIRATION ONLY. Do NOT copy, replicate, or paste elements from the references. Use them only as loose inspiration for mood, color palette, and composition ideas. Create something NEW and original. The product(s) must remain the hero. Each output must be distinctly different.";
+  "You receive two groups of images. FIRST: product(s) to showcase. SECOND: creative references (ads) for INSPIRATION ONLY. Do NOT copy, replicate, or paste elements from the references. Use them only as loose inspiration for mood, color palette, and composition ideas. Create something NEW and original. The product(s) must remain the hero. Each output must be distinctly different. " +
+  MARKETING_STYLE;
 
 const BASE_PROMPT_NO_REFS =
-  "You receive product(s) to showcase. Create creative ad variations. The product(s) must remain the hero. Each output must be distinctly different. Be original and inventive.";
+  "You receive product(s) to showcase. Create creative ad variations. The product(s) must remain the hero. Each output must be distinctly different. Be original and inventive. " +
+  MARKETING_STYLE;
 
 const FUSION_HINT =
   " When multiple products are provided, merge them CREATIVELY: one product can adopt the colors, design, or style of another. Create a cohesive creative ensemble — not just placing them side by side.";
 
 const CREATIVE_DIRECTIONS = [
-  "TOFU (Top of funnel — awareness): Lifestyle mood through colors and setting only — no human figures, no coffee, no unrelated objects. The product alone in an aspirational environment. No hard sell, no promo text. Draw the viewer in with desire and aspiration. Original layout.",
-  "MOFU (Middle of funnel — consideration): Value-focused, educational. Highlight benefits, quality, use cases. Subtle headline or tagline. Help the viewer consider the product. Original creative.",
-  "BOFU (Bottom of funnel — conversion): Promo, urgency, CTA. Discount badge, gift offer, or call-to-action. Conversion-focused. Dark or rich background. Original take.",
-  "Creative mix: Blend TOFU and BOFU — aspirational yet conversion-ready. Bold headline, premium feel, subtle CTA. Entirely original.",
+  "TOFU (Top of funnel — awareness): Soft gradient or solid background. Product centered. Optional headline and tagline. No hard sell. Aspirational mood through color only.",
+  "MOFU (Middle of funnel — consideration): Graphic layout with benefits or value props. Headline + 2–4 benefit icons or short lines. Clean background. Product as hero.",
+  "BOFU (Bottom of funnel — conversion): Bold CTA, promo badge, or offer. Dark or rich solid background. Conversion-focused. Product + clear call-to-action.",
+  "Creative mix: Premium graphic ad. Headline + benefits + CTA. Gradient or solid background. Product integrated into the layout.",
 ];
 
 const buildPrompt = (creativeDirection: string, fusion: boolean, hasReferences: boolean): string => {
