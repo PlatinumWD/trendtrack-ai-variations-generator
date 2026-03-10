@@ -29,10 +29,10 @@ const BASE_PROMPT = "You receive two groups of images. FIRST: product(s) to show
 const FUSION_HINT = " When multiple products are provided, merge them CREATIVELY: one product can adopt the colors, design, or style of another. Create a cohesive creative ensemble — not just placing them side by side.";
 
 const CREATIVE_DIRECTIONS = [
-  "Create a completely original creative: draw inspiration from the references for mood only, but invent a fresh layout. Surprise the viewer. Avoid copying any element from the references.",
-  "Create a radically different creative: take one idea from the references (e.g. a color or composition) and reinterpret it in your own way. The result must look nothing like the references.",
-  "Create a bold, unexpected creative: subvert the references. If they are minimal, go rich. If they are dark, go light. Make it distinctly yours.",
-  "Create a unique creative: mix influences from the references with entirely new ideas. The final image must be original and unrecognizable from the source references.",
+  "TOFU (Top of funnel — awareness): Aspirational, lifestyle, brand-building. No hard sell, no promo text. Draw the viewer in with desire and aspiration. Original layout, inspired by references for mood only.",
+  "MOFU (Middle of funnel — consideration): Value-focused, educational. Highlight benefits, quality, use cases. Subtle headline or tagline. Help the viewer consider the product. Original creative, do not copy references.",
+  "BOFU (Bottom of funnel — conversion): Promo, urgency, CTA. Discount badge, gift offer, or call-to-action. Conversion-focused. Dark or rich background. Original take, inspired by references for composition ideas only.",
+  "Creative mix: Blend TOFU and BOFU — aspirational yet conversion-ready. Bold headline, premium feel, subtle CTA. Entirely original, unrecognizable from the source references.",
 ];
 
 const buildPrompt = (creativeDirection: string, fusion: boolean): string => {

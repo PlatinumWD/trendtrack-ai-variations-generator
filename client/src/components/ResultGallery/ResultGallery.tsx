@@ -3,6 +3,8 @@ import { GeneratedImage } from '../../types/image.types';
 import { GenerateResponseUsage } from '../../types/api.types';
 import { appConfig } from '@config/app.config';
 
+const VARIATION_LABELS = ['TOFU', 'MOFU', 'BOFU', 'Creative mix'] as const;
+
 interface ResultGalleryProps {
   images: GeneratedImage[];
   usage?: GenerateResponseUsage | null;

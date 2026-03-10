@@ -6,6 +6,6 @@ export const ALLOWED_MIME_TYPES = [
 ];
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-export const MAX_FILES = 4;
-export const MAX_PRODUCTS = 2;
-export const MAX_REFERENCES = 4;
+export const MAX_FILES = 10;
+export const MAX_PRODUCTS = 10;
+export const MAX_REFERENCES = 10;

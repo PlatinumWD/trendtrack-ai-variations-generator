@@ -9,8 +9,8 @@ import { useAIProcessing } from '@hooks/useAIProcessing';
 export const Home: React.FC = () => {
   const [variationCount, setVariationCount] = useState<number>(1);
   const [fusionEnabled, setFusionEnabled] = useState<boolean>(false);
-  const products = useImageUpload(2);
-  const references = useImageUpload(4);
+  const products = useImageUpload(10);
+  const references = useImageUpload(10);
   const { isLoading, generatedImages, usage, model, error: aiError, generate } = useAIProcessing();
 
   const handleGenerate = () => {
@@ -45,7 +45,7 @@ export const Home: React.FC = () => {
                 onFilesSelected={products.addImages}
                 disabled={isLoading}
                 label="Upload product images"
-                hint="Max 2 images, 10MB each"
+                hint="Max 10 images, 10MB each"
               />
               {products.error && (
                 <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{products.error}</div>
@@ -64,7 +64,7 @@ export const Home: React.FC = () => {
                 onFilesSelected={references.addImages}
                 disabled={isLoading}
                 label="Upload ad references for style inspiration"
-                hint="Max 4 images, 10MB each"
+                hint="Max 10 images, 10MB each"
               />
               {references.error && (
                 <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{references.error}</div>
