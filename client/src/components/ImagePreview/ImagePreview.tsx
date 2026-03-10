@@ -5,14 +5,15 @@ interface ImagePreviewProps {
   images: UploadedImage[];
   onRemove: (id: string) => void;
   disabled?: boolean;
+  title?: string;
 }
 
-export const ImagePreview: React.FC<ImagePreviewProps> = ({ images, onRemove, disabled = false }) => {
+export const ImagePreview: React.FC<ImagePreviewProps> = ({ images, onRemove, disabled = false, title }) => {
   if (images.length === 0) return null;
 
   return (
     <div className="mt-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-3">Selected Images ({images.length})</h3>
+      <h3 className="text-lg font-semibold text-gray-800 mb-3">{title ? `${title} (${images.length})` : `Selected Images (${images.length})`}</h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {images.map((img) => (
           <div key={img.id} className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm aspect-square bg-gray-50">

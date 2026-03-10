@@ -6,36 +6,48 @@ import fs from 'fs/promises';
 export const aiController = {
   generateVariations: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const files = req.files as Express.Multer.File[];
+      const files = req.files as { products?: Express.Multer.File[]; references?: Express.Multer.File[] };
+      const productFiles = files?.products ?? [];
+      const referenceFiles = files?.references ?? [];
       const countStr = req.body.count;
       const count = countStr ? parseInt(countStr, 10) : 1;
-      const promptAddition = typeof req.body.promptAddition === 'string' ? req.body.promptAddition.trim() : undefined;
-      
-      if (!files || files.length === 0) {
-        return res.status(400).json({ error: 'No images provided' });
+      const fusion = req.body.fusion === 'true';
+
+      if (productFiles.length === 0 || referenceFiles.length === 0) {
+        return res.status(400).json({ error: 'Both products and references are required' });
       }
 
-      // Convert local files to base64 data URLs and track max dimension
-      const base64Images: string[] = [];
+      const productBase64: string[] = [];
+      const referenceBase64: string[] = [];
       let maxDimension = 0;
-      for (const file of files) {
+
+      for (const file of productFiles) {
         const { dataUrl, width, height } = await imageService.encodeToBase64(file.path);
-        base64Images.push(dataUrl);
+        productBase64.push(dataUrl);
+        maxDimension = Math.max(maxDimension, width, height);
+      }
+      for (const file of referenceFiles) {
+        const { dataUrl, width, height } = await imageService.encodeToBase64(file.path);
+        referenceBase64.push(dataUrl);
         maxDimension = Math.max(maxDimension, width, height);
       }
 
-      // Call OpenRouter with dimension-aware output size
-      const { images: generatedBase64DataUrls, model, usage } = await openrouterService.generateVariations(base64Images, promptAddition, count, maxDimension);
+      const { images: generatedBase64DataUrls, model, usage } = await openrouterService.generateVariations(
+        productBase64,
+        referenceBase64,
+        count,
+        maxDimension,
+        fusion
+      );
 
-      // Save generated images
       const savedImageUrls: string[] = [];
       for (const base64DataUrl of generatedBase64DataUrls) {
         const relativeUrl = await imageService.saveGeneratedImage(base64DataUrl);
         savedImageUrls.push(relativeUrl);
       }
 
-      // Cleanup uploaded files (optional, but good for space)
-      for (const file of files) {
+      const allFiles = [...productFiles, ...referenceFiles];
+      for (const file of allFiles) {
         try {
           await fs.unlink(file.path);
         } catch (err) {

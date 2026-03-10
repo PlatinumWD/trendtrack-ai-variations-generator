@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { UploadedImage } from '../types/image.types';
-import { validateImageFile, MAX_FILES } from '@utils/file.utils';
+import { validateImageFile } from '@utils/file.utils';
 
-export const useImageUpload = () => {
+export const useImageUpload = (maxFiles: number = 4) => {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -11,8 +11,8 @@ export const useImageUpload = () => {
     setError(null);
     const fileArray = Array.from(files);
     
-    if (images.length + fileArray.length > MAX_FILES) {
-      setError(`You can only upload a maximum of ${MAX_FILES} images.`);
+    if (images.length + fileArray.length > maxFiles) {
+      setError(`Maximum ${maxFiles} images allowed.`);
       return;
     }
 
@@ -33,7 +33,7 @@ export const useImageUpload = () => {
     }
 
     setImages(prev => [...prev, ...newImages]);
-  }, [images.length]);
+  }, [images.length, maxFiles]);
 
   const removeImage = useCallback((id: string) => {
     setImages(prev => {

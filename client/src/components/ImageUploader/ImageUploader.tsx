@@ -3,9 +3,11 @@ import React, { useRef } from 'react';
 interface ImageUploaderProps {
   onFilesSelected: (files: FileList) => void;
   disabled?: boolean;
+  label?: string;
+  hint?: string;
 }
 
-export const ImageUploader: React.FC<ImageUploaderProps> = ({ onFilesSelected, disabled = false }) => {
+export const ImageUploader: React.FC<ImageUploaderProps> = ({ onFilesSelected, disabled = false, label, hint }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -58,10 +60,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onFilesSelected, d
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
       </svg>
       <p className="text-gray-600 text-center font-medium">
-        Click or drag and drop images here
+        {label || 'Click or drag and drop images here'}
       </p>
       <p className="text-gray-400 text-sm mt-2 text-center">
-        Supports JPG, PNG, WEBP, GIF (Max 4 images, 10MB each)
+        {hint || 'Supports JPG, PNG, WEBP, GIF (Max 4 images, 10MB each)'}
       </p>
     </div>
   );

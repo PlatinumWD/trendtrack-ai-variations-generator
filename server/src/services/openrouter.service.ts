@@ -24,30 +24,41 @@ export interface GenerateVariationsResult {
   usage: { prompt_tokens: number; completion_tokens: number; total_cost: number };
 }
 
-const BASE_PROMPT = "You receive images. Identify which are products and which are supports or contexts. When multiple products are provided, merge them CREATIVELY: one product can adopt the colors, design, or style of another (e.g. a wallet taking the colors of a card). Create a cohesive creative ensemble with a creative rendering around it — not just placing them side by side. Place onto supports seamlessly. Products must remain the hero. Infer roles from the images — no order assumed.";
+const BASE_PROMPT = "You receive two groups of images. FIRST: product(s) to showcase. SECOND: creative references (ads) for INSPIRATION ONLY. Do NOT copy, replicate, or paste elements from the references. Use them only as loose inspiration for mood, color palette, and composition ideas. Create something NEW and original. The product(s) must remain the hero. Each output must be distinctly different.";
 
-const STYLE_HINTS = [
-  "Create a lifestyle shot: all products together in real-world use (equipment, kitchen, accessories). Professional, aspirational. No text overlays.",
-  "Create a conceptual marketing creative: all products centered in a creative arrangement. Add a compelling headline and a CTA button. Editorial, brand-forward style.",
-  "Create an e-commerce promo ad: all products with promotional elements — discount badge, gift offer, short promo copy. Dark or rich background. Conversion-focused.",
-  "Create a clean product shot: all products in a minimalist setup, premium lighting. Elegant, high-end. Optional subtle tagline.",
+const FUSION_HINT = " When multiple products are provided, merge them CREATIVELY: one product can adopt the colors, design, or style of another. Create a cohesive creative ensemble — not just placing them side by side.";
+
+const CREATIVE_DIRECTIONS = [
+  "Create a completely original creative: draw inspiration from the references for mood only, but invent a fresh layout. Surprise the viewer. Avoid copying any element from the references.",
+  "Create a radically different creative: take one idea from the references (e.g. a color or composition) and reinterpret it in your own way. The result must look nothing like the references.",
+  "Create a bold, unexpected creative: subvert the references. If they are minimal, go rich. If they are dark, go light. Make it distinctly yours.",
+  "Create a unique creative: mix influences from the references with entirely new ideas. The final image must be original and unrecognizable from the source references.",
 ];
 
-const buildPrompt = (styleHint: string, promptAddition?: string): string => {
-  const parts = [BASE_PROMPT, styleHint];
-  if (promptAddition) parts.push(promptAddition);
+const buildPrompt = (creativeDirection: string, fusion: boolean): string => {
+  const parts = [BASE_PROMPT, creativeDirection];
+  if (fusion) parts.push(FUSION_HINT);
   return parts.join(" ");
 };
 
 export const openrouterService = {
-  generateVariations: async (base64Images: string[], promptAddition?: string, count: number = 1, maxInputDimension: number = 1024): Promise<GenerateVariationsResult> => {
+  generateVariations: async (
+    productBase64: string[],
+    referenceBase64: string[],
+    count: number = 1,
+    maxInputDimension: number = 1024,
+    fusion: boolean = false
+  ): Promise<GenerateVariationsResult> => {
     const outputSize = resolveOutputSize(maxInputDimension);
 
-    const buildPayload = (styleHint: string) => {
-      const textPrompt = buildPrompt(styleHint, promptAddition);
+    const buildPayload = (creativeDirection: string) => {
+      const textPrompt = buildPrompt(creativeDirection, fusion);
       const content: OpenRouterContent[] = [{ type: 'text', text: textPrompt }];
-      for (const base64Image of base64Images) {
-        content.push({ type: 'image_url', image_url: { url: base64Image } });
+      for (const url of productBase64) {
+        content.push({ type: 'image_url', image_url: { url } });
+      }
+      for (const url of referenceBase64) {
+        content.push({ type: 'image_url', image_url: { url } });
       }
       return {
         model: MODEL_ID,
@@ -61,8 +72,8 @@ export const openrouterService = {
     const MAX_RETRIES = 2;
 
     const generateSingle = async (index: number): Promise<{ image: string | null; usage: OpenRouterUsage }> => {
-      const styleHint = STYLE_HINTS[index % STYLE_HINTS.length];
-      const payload = buildPayload(styleHint);
+      const creativeDirection = CREATIVE_DIRECTIONS[index % CREATIVE_DIRECTIONS.length];
+      const payload = buildPayload(creativeDirection);
       const headers = {
         'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',

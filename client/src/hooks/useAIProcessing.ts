@@ -11,8 +11,8 @@ export const useAIProcessing = () => {
   const [model, setModel] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const generate = useCallback(async (files: File[], count: number = 1) => {
-    if (!files || files.length === 0) return;
+  const generate = useCallback(async (productFiles: File[], referenceFiles: File[], count: number = 1, fusion: boolean = false) => {
+    if (!productFiles?.length || !referenceFiles?.length) return;
 
     setIsLoading(true);
     setError(null);
@@ -20,7 +20,7 @@ export const useAIProcessing = () => {
     setModel(null);
 
     try {
-      const data = await aiService.generateVariations(files, count);
+      const data = await aiService.generateVariations(productFiles, referenceFiles, count, fusion);
       const newImages = data.generatedImages.map(url => ({
         id: uuidv4(),
         url
