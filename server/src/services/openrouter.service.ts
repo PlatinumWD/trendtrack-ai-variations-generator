@@ -7,8 +7,8 @@ type ImageSize = NonNullable<OpenRouterImageConfig['image_size']>;
 const resolveOutputSize = (): ImageSize => '2K';
 
 const MODEL_ID = 'google/gemini-3.1-flash-image-preview';
-const INPUT_COST_PER_TOKEN = 0.30 / 1_000_000;
-const OUTPUT_COST_PER_TOKEN = 2.50 / 1_000_000;
+const INPUT_COST_PER_TOKEN = 0.50 / 1_000_000;
+const OUTPUT_COST_PER_TOKEN = 3.00 / 1_000_000;
 
 const computeCost = (promptTokens: number, completionTokens: number): number =>
   promptTokens * INPUT_COST_PER_TOKEN + completionTokens * OUTPUT_COST_PER_TOKEN;
