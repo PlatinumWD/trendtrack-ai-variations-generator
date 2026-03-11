@@ -4,14 +4,9 @@ import { OpenRouterRequest, OpenRouterResponse, OpenRouterContent, OpenRouterIma
 
 type ImageSize = NonNullable<OpenRouterImageConfig['image_size']>;
 
-const resolveOutputSize = (maxInputDimension: number): ImageSize => {
-  if (maxInputDimension <= 512) return '1K';
-  if (maxInputDimension <= 1024) return '1K';
-  if (maxInputDimension <= 2048) return '2K';
-  return '2K';
-};
+const resolveOutputSize = (): ImageSize => '2K';
 
-const MODEL_ID = 'google/gemini-2.5-flash-image';
+const MODEL_ID = 'google/gemini-3.1-flash-image-preview';
 const INPUT_COST_PER_TOKEN = 0.30 / 1_000_000;
 const OUTPUT_COST_PER_TOKEN = 2.50 / 1_000_000;
 
@@ -24,8 +19,12 @@ export interface GenerateVariationsResult {
   usage: { prompt_tokens: number; completion_tokens: number; total_cost: number };
 }
 
+const TEXT_PRESERVATION =
+  "CRITICAL — Product integrity: DO NOT modify the product itself. The product image, including its shape, label, and ALL text on it, must remain exactly 100% identical to the input. DO NOT alter, rewrite, guess, blur, or reconstruct the product's text. Treat the product as a fixed, untouchable layer. Only change the background and surrounding elements.";
+
 const MARKETING_STYLE =
-  "Output must be a MARKETING GRAPHIC: clean, designed ad layout. Use solid or gradient backgrounds — NO blurred rooms, furniture, or environmental clutter. Prefer graphic-style compositions with headline, benefits, or CTA when fitting. Product on a minimal surface or integrated into the layout. No people, no coffee, no unrelated objects.";
+  "Output must be a MARKETING GRAPHIC: clean, designed ad layout. Use solid or gradient backgrounds — NO blurred rooms, furniture, or environmental clutter. Prefer graphic-style compositions with headline, benefits, or CTA when fitting. People are OPTIONAL: sometimes include zero people, sometimes one, sometimes a group, decided randomly. No unrelated objects. " +
+  TEXT_PRESERVATION;
 
 const BASE_PROMPT_WITH_REFS =
   "You receive two groups of images. FIRST: product(s) to showcase. SECOND: creative references (ads) for INSPIRATION ONLY. Do NOT copy, replicate, or paste elements from the references. Use them only as loose inspiration for mood, color palette, and composition ideas. Create something NEW and original. The product(s) must remain the hero. Each output must be distinctly different. " +
@@ -39,15 +38,26 @@ const FUSION_HINT =
   " When multiple products are provided, merge them CREATIVELY: one product can adopt the colors, design, or style of another. Create a cohesive creative ensemble — not just placing them side by side.";
 
 const CREATIVE_DIRECTIONS = [
-  "TOFU (Top of funnel — awareness): Soft gradient or solid background. Product centered. Optional headline and tagline. No hard sell. Aspirational mood through color only.",
-  "MOFU (Middle of funnel — consideration): Graphic layout with benefits or value props. Headline + 2–4 benefit icons or short lines. Clean background. Product as hero.",
-  "BOFU (Bottom of funnel — conversion): Bold CTA, promo badge, or offer. Dark or rich solid background. Conversion-focused. Product + clear call-to-action.",
-  "Creative mix: Premium graphic ad. Headline + benefits + CTA. Gradient or solid background. Product integrated into the layout.",
+  "Focus: TOFU (Top of funnel — awareness). Soft gradient or solid background. Optional headline. No hard sell. Aspirational mood.",
+  "Focus: MOFU (Middle of funnel — consideration). Graphic layout. Clean background with 2–4 benefit icons or short lines. Focus on value props.",
+  "Focus: BOFU (Bottom of funnel — conversion). Bold CTA, promo badge, or offer. Dark or rich solid background.",
+  "Focus: Creative mix. Premium graphic ad. Headline + benefits + CTA. Gradient or solid background.",
+  "Focus: Storytelling. Showcase the product in a dynamic, highly graphical way with abstract geometric shapes.",
+  "Focus: Minimalist. Extremely clean, lots of negative space, focus entirely on the product's premium feel.",
 ];
 
 const buildPrompt = (creativeDirection: string, fusion: boolean, hasReferences: boolean): string => {
   const base = hasReferences ? BASE_PROMPT_WITH_REFS : BASE_PROMPT_NO_REFS;
-  const parts = [base, creativeDirection];
+  // Add dynamic random assignment for people to ensure variety across any number of generations
+  const peopleOptions = [
+    "Do NOT include any people.",
+    "Include a single person interacting with the product.",
+    "Include a couple or duo.",
+    "Include a diverse group or family."
+  ];
+  const randomPeople = peopleOptions[Math.floor(Math.random() * peopleOptions.length)];
+  
+  const parts = [base, creativeDirection, `Human presence constraint for this specific image: ${randomPeople}`];
   if (fusion) parts.push(FUSION_HINT);
   return parts.join(" ");
 };
@@ -61,7 +71,7 @@ export const openrouterService = {
     fusion: boolean = false,
     variationIndex?: number
   ): Promise<GenerateVariationsResult> => {
-    const outputSize = resolveOutputSize(maxInputDimension);
+    const outputSize = resolveOutputSize();
 
     const hasReferences = referenceBase64.length > 0;
     const buildPayload = (creativeDirection: string) => {
@@ -79,6 +89,7 @@ export const openrouterService = {
         modalities: ['image', 'text'],
         max_tokens: 512,
         image_config: { image_size: outputSize },
+        system: "You are a helpful assistant that generates marketing graphics for products. You are given a product and a set of references, and you need to generate a marketing graphic for the product. You are also given a creative direction, and you need to generate a marketing graphic for the product that matches the creative direction. You are also given a human presence constraint, and you need to generate a marketing graphic for the product that matches the human presence constraint."
       };
     };
 

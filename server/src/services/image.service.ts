@@ -3,7 +3,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
 
-const MAX_INPUT_DIMENSION = 1024;
+const MAX_INPUT_DIMENSION = 2048;
 
 export const imageService = {
   // Resize image to cap the longest side, reducing token cost
