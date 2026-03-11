@@ -11,6 +11,7 @@ export const Home: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [variationCount, setVariationCount] = useState<number>(1);
   const [fusionEnabled, setFusionEnabled] = useState<boolean>(false);
+  const [visualDirection, setVisualDirection] = useState<string>('auto');
   const products = useImageUpload(10);
   const references = useImageUpload(10);
   const { isLoading, generatedImages, usage, model, error: aiError, generate, regenerateSingle, replaceImageAtIndex } = useAIProcessing();
@@ -22,7 +23,8 @@ export const Home: React.FC = () => {
       products.images.map((i) => i.file),
       references.images.map((i) => i.file),
       variationCount,
-      fusionEnabled
+      fusionEnabled,
+      visualDirection
     );
   };
 
@@ -36,7 +38,8 @@ export const Home: React.FC = () => {
         products.images.map((i) => i.file),
         references.images.map((i) => i.file),
         fusionEnabled,
-        index
+        index,
+        visualDirection
       );
       if (newImage) replaceImageAtIndex(index, newImage);
     } finally {
@@ -134,6 +137,92 @@ export const Home: React.FC = () => {
             {/* AI Settings & Generation */}
             {canGenerate && (
               <div className="pt-8 border-t border-zinc-100">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-zinc-900 mb-4">Visual Direction</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {[
+                      {
+                        id: 'auto',
+                        title: 'Let AI Decide',
+                        desc: 'Best visual layout chosen by AI',
+                        icon: (
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        )
+                      },
+                      {
+                        id: 'marketing',
+                        title: 'Classic Marketing',
+                        desc: 'Clean ad layout, focus on value proposition',
+                        icon: (
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                          </svg>
+                        )
+                      },
+                      {
+                        id: 'comparison',
+                        title: 'Comparison',
+                        desc: 'Before & after style, split layout',
+                        icon: (
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        )
+                      },
+                      {
+                        id: 'focus',
+                        title: 'Product Focus',
+                        desc: 'Macro close-up, extreme detail, no people',
+                        icon: (
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                          </svg>
+                        )
+                      },
+                      {
+                        id: 'mix',
+                        title: 'Creative Mix',
+                        desc: 'Abstract, bold colors, unusual angles',
+                        icon: (
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                          </svg>
+                        )
+                      }
+                    ].map((dir) => (
+                      <div
+                        key={dir.id}
+                        onClick={() => setVisualDirection(dir.id)}
+                        className={`relative flex flex-col p-4 cursor-pointer rounded-xl border-2 transition-all duration-200 ${
+                          visualDirection === dir.id
+                            ? 'border-zinc-900 bg-zinc-50'
+                            : 'border-zinc-200 bg-white hover:border-zinc-400 hover:bg-zinc-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className={`p-2 rounded-lg ${visualDirection === dir.id ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600'}`}>
+                            {dir.icon}
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            visualDirection === dir.id ? 'border-zinc-900' : 'border-zinc-300'
+                          }`}>
+                            {visualDirection === dir.id && <div className="w-2.5 h-2.5 rounded-full bg-zinc-900" />}
+                          </div>
+                        </div>
+                        <h4 className={`font-semibold text-sm mb-1 ${visualDirection === dir.id ? 'text-zinc-900' : 'text-zinc-700'}`}>
+                          {dir.title}
+                        </h4>
+                        <p className="text-xs text-zinc-500 leading-relaxed">
+                          {dir.desc}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-zinc-50/50 p-6 rounded-2xl border border-zinc-100">
                   <div className="space-y-4">
                     <label className="flex items-center gap-3 cursor-pointer group">

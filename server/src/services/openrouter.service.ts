@@ -46,18 +46,50 @@ const CREATIVE_DIRECTIONS = [
   "Focus: Minimalist. Extremely clean, lots of negative space, focus entirely on the product's premium feel.",
 ];
 
-const buildPrompt = (creativeDirection: string, fusion: boolean, hasReferences: boolean): string => {
-  const base = hasReferences ? BASE_PROMPT_WITH_REFS : BASE_PROMPT_NO_REFS;
-  // Add dynamic random assignment for people to ensure variety across any number of generations
+const buildPrompt = (creativeDirection: string, fusion: boolean, hasReferences: boolean, visualDirection: string, index: number): string => {
+  const base = hasReferences 
+    ? "You receive two groups of images. FIRST: product(s) to showcase. SECOND: creative references (ads). HIGHLY IMPORTANT: You MUST strongly draw inspiration from the references for layout, style, composition, lighting, and mood. The references dictate the visual language. Create a new image using the product(s), matching the aesthetic and structure of the references as closely as possible without violating other rules. The product(s) must remain the hero. " + MARKETING_STYLE
+    : BASE_PROMPT_NO_REFS;
+
+  // Use the index to deterministically force an equal distribution of ethnicities
   const peopleOptions = [
     "Do NOT include any people.",
-    "Include a single person interacting with the product.",
-    "Include a couple or duo.",
-    "Include a diverse group or family."
+    "Include a single Caucasian person interacting with the product.",
+    "Include a single Asian person interacting with the product.",
+    "Include a single Black person interacting with the product.",
+    "Include a single person of mixed ethnicity interacting with the product.",
+    "Include a couple or duo with mixed ethnicities.",
+    "Include a diverse group or family (mix of Caucasian, Asian, Black, etc.)."
   ];
-  const randomPeople = peopleOptions[Math.floor(Math.random() * peopleOptions.length)];
+  // Modulo ensures we rotate through all options perfectly equally
+  const randomPeople = peopleOptions[index % peopleOptions.length];
   
-  const parts = [base, creativeDirection, `Human presence constraint for this specific image: ${randomPeople}`];
+  let visualDirectionPrompt = "";
+  switch (visualDirection) {
+    case 'comparison':
+      visualDirectionPrompt = "VISUAL DIRECTION: 'Comparison / Before & After' style. Show a clear split layout. Use visual cues like lines or split screens to emphasize difference. Ensure the product is central to the positive outcome.";
+      break;
+    case 'focus':
+      visualDirectionPrompt = "VISUAL DIRECTION: 'Product Focus / Macro' style. Extreme close-up or highly detailed focus on the product itself. Minimalist background, high contrast lighting, emphasizing texture and premium quality. ABSOLUTELY NO PEOPLE in this specific generation.";
+      break;
+    case 'mix':
+      visualDirectionPrompt = "VISUAL DIRECTION: 'Creative Mix' style. Blend lifestyle elements with bold graphic design. Expect the unexpected: unusual angles, striking colors, or abstract geometric framing.";
+      break;
+    case 'marketing':
+      visualDirectionPrompt = "VISUAL DIRECTION: 'Classic Marketing' style. Clean, highly professional ad layout. Focus on strong composition, space for copy, and clear value proposition.";
+      break;
+    case 'auto':
+    default:
+      visualDirectionPrompt = "VISUAL DIRECTION: 'Auto / AI Choice'. Choose the best visual layout for the product. Feel free to be creative.";
+      break;
+  }
+
+  const parts = [
+    base, 
+    visualDirectionPrompt,
+    creativeDirection, 
+    visualDirection !== 'focus' ? `Human presence constraint for this specific image: ${randomPeople}` : ''
+  ];
   if (fusion) parts.push(FUSION_HINT);
   return parts.join(" ");
 };
@@ -69,13 +101,14 @@ export const openrouterService = {
     count: number = 1,
     maxInputDimension: number = 1024,
     fusion: boolean = false,
-    variationIndex?: number
+    variationIndex?: number,
+    visualDirection: string = 'marketing'
   ): Promise<GenerateVariationsResult> => {
     const outputSize = resolveOutputSize();
 
     const hasReferences = referenceBase64.length > 0;
-    const buildPayload = (creativeDirection: string) => {
-      const textPrompt = buildPrompt(creativeDirection, fusion, hasReferences);
+    const buildPayload = (creativeDirection: string, index: number) => {
+      const textPrompt = buildPrompt(creativeDirection, fusion, hasReferences, visualDirection, index);
       const content: OpenRouterContent[] = [{ type: 'text', text: textPrompt }];
       for (const url of productBase64) {
         content.push({ type: 'image_url', image_url: { url } });
@@ -97,7 +130,7 @@ export const openrouterService = {
 
     const generateSingle = async (index: number): Promise<{ image: string | null; usage: OpenRouterUsage }> => {
       const creativeDirection = CREATIVE_DIRECTIONS[index % CREATIVE_DIRECTIONS.length];
-      const payload = buildPayload(creativeDirection);
+      const payload = buildPayload(creativeDirection, index);
       const headers = {
         'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',

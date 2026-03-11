@@ -59,7 +59,7 @@ usage: {
 
 **File**: `server/src/services/image.service.ts`
 
-- Images are resized to a maximum dimension of **2048px** before encoding.
+- Images are resized to a maximum dimension of **1536px** before encoding.
 - `resizeForInput()` uses Sharp with `fit: 'inside'` and `withoutEnlargement: true`.
 - Smaller images = fewer tokens = lower cost.
 
@@ -125,7 +125,7 @@ usage: {
 
 | Constant | Value | Purpose |
 |----------|-------|---------|
-| `MAX_INPUT_DIMENSION` | 2048 | Max width/height before resize |
+| `MAX_INPUT_DIMENSION` | 1536 | Max width/height before resize |
 
 ---
 

@@ -3,31 +3,39 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
 
-const MAX_INPUT_DIMENSION = 2048;
+const MAX_INPUT_DIMENSION = 1536;
 
 export const imageService = {
-  // Resize image to cap the longest side, reducing token cost
-  resizeForInput: async (filePath: string): Promise<Buffer> => {
+  // Resize image to cap the longest side, reducing token cost and API latency
+  resizeForInput: async (
+    filePath: string
+  ): Promise<{ buffer: Buffer; width: number; height: number }> => {
     const image = sharp(filePath);
     const metadata = await image.metadata();
     const width = metadata.width || 0;
     const height = metadata.height || 0;
 
-    if (width <= MAX_INPUT_DIMENSION && height <= MAX_INPUT_DIMENSION) {
-      return image.toBuffer();
-    }
+    const pipeline =
+      width <= MAX_INPUT_DIMENSION && height <= MAX_INPUT_DIMENSION
+        ? image
+        : image.resize({
+            width: MAX_INPUT_DIMENSION,
+            height: MAX_INPUT_DIMENSION,
+            fit: 'inside',
+            withoutEnlargement: true,
+          });
 
-    return image
-      .resize({
-        width: MAX_INPUT_DIMENSION,
-        height: MAX_INPUT_DIMENSION,
-        fit: 'inside',
-        withoutEnlargement: true,
-      })
-      .toBuffer();
+    const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
+    return {
+      buffer: data,
+      width: info.width || width,
+      height: info.height || height,
+    };
   },
 
-  encodeToBase64: async (filePath: string): Promise<{ dataUrl: string; width: number; height: number }> => {
+  encodeToBase64: async (
+    filePath: string
+  ): Promise<{ dataUrl: string; width: number; height: number }> => {
     const ext = path.extname(filePath).toLowerCase();
     const mimeMap: Record<string, string> = {
       '.jpg': 'image/jpeg',
@@ -36,16 +44,9 @@ export const imageService = {
       '.webp': 'image/webp',
       '.gif': 'image/gif',
     };
-    
     const mimeType = mimeMap[ext] || 'image/jpeg';
-    const resizedBuffer = await imageService.resizeForInput(filePath);
-
-    const metadata = await sharp(resizedBuffer).metadata();
-    const width = metadata.width || 0;
-    const height = metadata.height || 0;
-
-    const base64Image = resizedBuffer.toString('base64');
-    
+    const { buffer, width, height } = await imageService.resizeForInput(filePath);
+    const base64Image = buffer.toString('base64');
     return {
       dataUrl: `data:${mimeType};base64,${base64Image}`,
       width,
