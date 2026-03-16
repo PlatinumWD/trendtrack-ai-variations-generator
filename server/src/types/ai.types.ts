@@ -1,6 +1,7 @@
 export interface OpenRouterImageContent {
   type: 'image_url';
   image_url: { url: string };
+  tag?: string;
 }
 
 export interface OpenRouterTextContent {

@@ -88,25 +88,20 @@ usage: {
 
 | Mode | Constant | When Used |
 |------|----------|-----------|
-| **With references** | `BASE_PROMPT_WITH_REFS` | `referenceBase64.length > 0` |
+| **With references** | Inline base prompt | `referenceBase64.length > 0` |
 | **Without references** | `BASE_PROMPT_NO_REFS` | No reference images |
 
-### `buildPrompt(creativeDirection, fusion, hasReferences)`
+### `buildPrompt(fusion, hasReferences, visualDirection, index, userContext?)`
 
 - **`hasReferences`** selects the base prompt.
-- **With refs**: Instructs the model to use references as *inspiration only* — mood, palette, composition — and to create something new. Explicitly forbids copying or pasting elements.
+- **With refs**: Instructs the model to strongly draw inspiration from the reference for layout, style, composition, lighting, and mood.
 - **Without refs**: Simpler prompt, no reference-related instructions.
+- **`visualDirection`**: Chosen by the user in the front (auto, marketing, comparison, focus, mix). All images follow this direction without distinction.
 
 ### Impact on Cost
 
 - **With refs**: More images in the payload → more prompt tokens → higher cost.
 - **Without refs**: Fewer images → fewer tokens → lower cost.
-
-### Creative Directions
-
-- `CREATIVE_DIRECTIONS` defines 6 styles (TOFU, MOFU, BOFU, Creative mix, Storytelling, Minimalist).
-- Each variation uses `CREATIVE_DIRECTIONS[index % 6]` for variety.
-- Regenerating a single variation reuses the same creative direction via `variationIndex`.
 
 ---
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ImageUploader } from '@components/ImageUploader/ImageUploader';
 import { ImagePreview } from '@components/ImagePreview/ImagePreview';
+import { ImageModal } from '@components/ImageModal/ImageModal';
 import { ResultGallery } from '@components/ResultGallery/ResultGallery';
 import { Loader } from '@components/Loader/Loader';
 import { Sidebar } from '@components/Sidebar/Sidebar';
@@ -12,10 +13,13 @@ export const Home: React.FC = () => {
   const [variationCount, setVariationCount] = useState<number>(1);
   const [fusionEnabled, setFusionEnabled] = useState<boolean>(false);
   const [visualDirection, setVisualDirection] = useState<string>('auto');
+  const [aspectRatio, setAspectRatio] = useState<string>('1:1');
+  const [additionalContext, setAdditionalContext] = useState<string>('');
   const products = useImageUpload(10);
-  const references = useImageUpload(10);
+  const references = useImageUpload(1);
   const { isLoading, generatedImages, usage, model, error: aiError, generate, regenerateSingle, replaceImageAtIndex } = useAIProcessing();
   const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ url: string; alt?: string } | null>(null);
 
   const handleGenerate = () => {
     if (products.images.length === 0) return;
@@ -24,7 +28,9 @@ export const Home: React.FC = () => {
       references.images.map((i) => i.file),
       variationCount,
       fusionEnabled,
-      visualDirection
+      visualDirection,
+      additionalContext.trim() || undefined,
+      aspectRatio
     );
   };
 
@@ -39,7 +45,9 @@ export const Home: React.FC = () => {
         references.images.map((i) => i.file),
         fusionEnabled,
         index,
-        visualDirection
+        visualDirection,
+        additionalContext.trim() || undefined,
+        aspectRatio
       );
       if (newImage) replaceImageAtIndex(index, newImage);
     } finally {
@@ -107,6 +115,7 @@ export const Home: React.FC = () => {
                   onRemove={products.removeImage}
                   disabled={isLoading}
                   title="Uploaded Products"
+                  onImageClick={(img) => setPreviewImage({ url: img.previewUrl, alt: img.file.name })}
                 />
               </div>
 
@@ -119,8 +128,8 @@ export const Home: React.FC = () => {
                 <ImageUploader
                   onFilesSelected={references.addImages}
                   disabled={isLoading}
-                  label="Drop reference ads"
-                  hint="Max 10 images, up to 10MB"
+                  label="Drop reference ad"
+                  hint="1 image max, up to 10MB"
                 />
                 {references.error && (
                   <div className="mt-3 p-3 bg-red-50 text-red-700 rounded-xl text-sm font-medium border border-red-100">{references.error}</div>
@@ -130,13 +139,60 @@ export const Home: React.FC = () => {
                   onRemove={references.removeImage}
                   disabled={isLoading}
                   title="Uploaded References"
+                  onImageClick={(img) => setPreviewImage({ url: img.previewUrl, alt: img.file.name })}
                 />
               </div>
             </div>
 
+            {canGenerate && (
+              <div className="space-y-2">
+                <label htmlFor="additional-context" className="block text-sm font-semibold text-zinc-900">
+                  Additional context (optional)
+                </label>
+                <p className="text-sm text-zinc-500">Extra instructions for the AI: product details, target audience, campaign message, etc.</p>
+                <textarea
+                  id="additional-context"
+                  value={additionalContext}
+                  onChange={(e) => setAdditionalContext(e.target.value)}
+                  placeholder="e.g. Summer campaign for young adults, eco-friendly positioning, slogan: Feel the freshness"
+                  disabled={isLoading}
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-white text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-y min-h-[80px]"
+                />
+              </div>
+            )}
+
             {/* AI Settings & Generation */}
             {canGenerate && (
               <div className="pt-8 border-t border-zinc-100">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-zinc-900 mb-4">Aspect Ratio</h3>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {[
+                      { id: '1:1', label: '1:1', desc: 'Square' },
+                      { id: '16:9', label: '16:9', desc: 'Landscape' },
+                      { id: '9:16', label: '9:16', desc: 'Portrait' },
+                      { id: '4:3', label: '4:3', desc: 'Classic' },
+                      { id: '3:4', label: '3:4', desc: 'Tall' }
+                    ].map((ar) => (
+                      <button
+                        key={ar.id}
+                        type="button"
+                        onClick={() => setAspectRatio(ar.id)}
+                        disabled={isLoading}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                          aspectRatio === ar.id
+                            ? 'bg-zinc-900 text-white shadow-md'
+                            : 'bg-white border border-zinc-200 text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50'
+                        } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <span className="text-zinc-500 font-normal mr-1">{ar.desc}</span>
+                        {ar.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-zinc-900 mb-4">Visual Direction</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -326,6 +382,15 @@ export const Home: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {previewImage && (
+        <ImageModal
+          imageUrl={previewImage.url}
+          alt={previewImage.alt}
+          isOpen={!!previewImage}
+          onClose={() => setPreviewImage(null)}
+        />
+      )}
     </div>
   );
 };

@@ -11,7 +11,7 @@ export const useAIProcessing = () => {
   const [model, setModel] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const generate = useCallback(async (productFiles: File[], referenceFiles: File[], count: number = 1, fusion: boolean = false, visualDirection: string = 'marketing') => {
+  const generate = useCallback(async (productFiles: File[], referenceFiles: File[], count: number = 1, fusion: boolean = false, visualDirection: string = 'marketing', userContext?: string, aspectRatio: string = '1:1') => {
     if (!productFiles?.length) return;
 
     setIsLoading(true);
@@ -20,7 +20,7 @@ export const useAIProcessing = () => {
     setModel(null);
 
     try {
-      const data = await aiService.generateVariations(productFiles, referenceFiles, count, fusion, undefined, visualDirection);
+      const data = await aiService.generateVariations(productFiles, referenceFiles, count, fusion, undefined, visualDirection, userContext, aspectRatio);
       const newImages = data.generatedImages.map((url) => ({
         id: uuidv4(),
         url,
@@ -42,7 +42,9 @@ export const useAIProcessing = () => {
       referenceFiles: File[],
       fusion: boolean,
       index: number,
-      visualDirection: string = 'marketing'
+      visualDirection: string = 'marketing',
+      userContext?: string,
+      aspectRatio: string = '1:1'
     ): Promise<GeneratedImage | null> => {
       if (!productFiles?.length) return null;
 
@@ -52,8 +54,10 @@ export const useAIProcessing = () => {
           referenceFiles,
           1,
           fusion,
-          index % 4,
-          visualDirection
+          index,
+          visualDirection,
+          userContext,
+          aspectRatio
         );
         if (!data.generatedImages?.length) return null;
         return { id: uuidv4(), url: data.generatedImages[0] };

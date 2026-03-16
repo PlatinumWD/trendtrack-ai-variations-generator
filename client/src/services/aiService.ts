@@ -8,7 +8,9 @@ export const aiService = {
     count: number = 1,
     fusion: boolean = false,
     variationIndex?: number,
-    visualDirection?: string
+    visualDirection?: string,
+    userContext?: string,
+    aspectRatio?: string
   ): Promise<GenerateResponse> => {
     const formData = new FormData();
     productFiles.forEach((file) => formData.append('products', file));
@@ -20,6 +22,12 @@ export const aiService = {
     }
     if (visualDirection) {
       formData.append('visualDirection', visualDirection);
+    }
+    if (aspectRatio) {
+      formData.append('aspectRatio', aspectRatio);
+    }
+    if (userContext) {
+      formData.append('userContext', userContext);
     }
 
     const response = await apiClient.post<GenerateResponse>('/ai/generate', formData, {

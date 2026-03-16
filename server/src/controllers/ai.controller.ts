@@ -13,6 +13,8 @@ export const aiController = {
       const count = countStr ? parseInt(countStr, 10) : 1;
       const fusion = req.body.fusion === 'true';
       const visualDirection = req.body.visualDirection || 'marketing';
+      const aspectRatio = req.body.aspectRatio || '1:1';
+      const userContext = typeof req.body.userContext === 'string' ? req.body.userContext.trim() : undefined;
       const variationIndexStr = req.body.variationIndex;
       const variationIndex = variationIndexStr !== undefined && variationIndexStr !== ''
         ? Math.max(0, Math.min(3, parseInt(variationIndexStr, 10)))
@@ -42,7 +44,9 @@ export const aiController = {
         maxDimension,
         fusion,
         variationIndex,
-        visualDirection
+        visualDirection,
+        userContext,
+        aspectRatio
       );
 
       const savedImageUrls = await Promise.all(

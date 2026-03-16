@@ -6,9 +6,10 @@ interface ImagePreviewProps {
   onRemove: (id: string) => void;
   disabled?: boolean;
   title?: string;
+  onImageClick?: (img: UploadedImage) => void;
 }
 
-export const ImagePreview: React.FC<ImagePreviewProps> = ({ images, onRemove, disabled = false, title }) => {
+export const ImagePreview: React.FC<ImagePreviewProps> = ({ images, onRemove, disabled = false, title, onImageClick }) => {
   if (images.length === 0) return null;
 
   return (
@@ -16,7 +17,14 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({ images, onRemove, di
       {title && <h3 className="text-sm font-medium text-zinc-500 mb-3 uppercase tracking-wide">{title} ({images.length})</h3>}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {images.map((img) => (
-          <div key={img.id} className="relative group rounded-xl overflow-hidden border border-zinc-200 shadow-sm aspect-square bg-zinc-50">
+          <div
+            key={img.id}
+            role={onImageClick ? 'button' : undefined}
+            tabIndex={onImageClick ? 0 : undefined}
+            onClick={onImageClick ? () => onImageClick(img) : undefined}
+            onKeyDown={onImageClick ? (e) => e.key === 'Enter' && onImageClick(img) : undefined}
+            className={`relative group rounded-xl overflow-hidden border border-zinc-200 shadow-sm aspect-square bg-zinc-50 ${onImageClick ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-inset' : ''}`}
+          >
             <img 
               src={img.previewUrl} 
               alt={img.file.name} 
